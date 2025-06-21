@@ -1,0 +1,16 @@
+services:
+  n8n:
+    image: n8n_custom
+    container_name: n8n_custom_container
+    ports:
+      - "5678:5678"
+    volumes:
+      - ./:/home/node/.n8n
+    environment:
+      - GENERIC_TIMEZONE= America/Sao_Paulo
+    restart: unless-stopped
+    networks:
+      - n8n_network
+networks:
+  n8n_network:
+    driver: bridge
