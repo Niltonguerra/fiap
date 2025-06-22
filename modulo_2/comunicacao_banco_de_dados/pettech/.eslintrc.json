@@ -1,7 +1,7 @@
 {
-  "env":{
+  "env": {
     "es2020": true,
-    "node": true,
+    "node": true
   },
   "extends": [
     "eslint:recommended",
@@ -14,7 +14,7 @@
     "sourceType": "module"
   },
 
-  "plugins": [ "@typescript-eslint" ],
+  "plugins": ["@typescript-eslint"],
   "rules": {
     "prettier/prettier": [
       "error",
@@ -26,7 +26,9 @@
         "arrowParens": "always",
         "semi": false,
       }
-    ]
+    ],
+    "camelcase": "off",
+    "no-useless-contructor": "off"
   },
   "settings": {
     "import/resolver": {

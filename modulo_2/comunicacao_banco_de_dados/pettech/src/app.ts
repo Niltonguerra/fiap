@@ -1,3 +1,5 @@
-import fastify from 'fastify';
+import fastify from 'fastify'
+import { personRoutes } from './http/controllers/person/routes'
 
-export const app = fastify();
+export const app = fastify()
+app.register(personRoutes)
