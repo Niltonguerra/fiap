@@ -1,11 +1,14 @@
 import { User } from '@/entities/user.entity';
 import { UserRepository } from '../repositories/user.repository';
 import { Person } from '@/entities/person.entity';
+import { ResourceNotFoundError } from './error/resource-not-found-error';
 
 export class FindWithPersonUseCase {
   constructor(private userRepository: UserRepository) {}
 
   async handler(userId: number): Promise<User & Person | undefined> {
-    return this.userRepository.findWithPersonId(userId);
+    const user = await this.userRepository.findWithPersonId(userId);
+    if (!user) throw new ResourceNotFoundError();
+    return user;
   }
 }
