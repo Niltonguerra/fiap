@@ -1,7 +1,6 @@
 import { FastifyReply, FastifyRequest } from "fastify";
 import { z } from "zod";
-import { PersonRepository } from '../../../repositories/person.repository';
-import { CreatePersonUseCase } from "@/use-cases/create-person";
+import { makeCreatePersonUseCase } from "@/use-cases/factory/make-create-person-use-case";
 
 export async function create(request: FastifyRequest, reply:FastifyReply){
   const registerBodySchema = z.object({
@@ -13,14 +12,8 @@ export async function create(request: FastifyRequest, reply:FastifyReply){
   })
 
   const { cpf, name, birth, email,user_id } = registerBodySchema.parse(request.body);
+  const createPersonUseCase = makeCreatePersonUseCase()
+  await createPersonUseCase.handler({cpf, name, birth, email,user_id})
+  return reply.status(201).send({ message: "Person created successfully" });
 
-  try{
-    const personRepository = new PersonRepository()
-    const createPersonUseCase = new CreatePersonUseCase(personRepository)
-    await createPersonUseCase.handler({cpf, name, birth, email,user_id})
-    return reply.status(201).send({ message: "Person created successfully" });
-  }catch (error){
-    console.error(error);
-    throw new Error("Internal Server error")
-  }
 }
