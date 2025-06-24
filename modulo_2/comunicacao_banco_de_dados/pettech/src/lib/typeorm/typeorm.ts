@@ -1,6 +1,7 @@
 import { DataSource } from 'typeorm';
 
 import { env } from '@/env';
+import { Product } from '@/entities/product.entity';
 
 export const appDataSource = new DataSource({
   type: 'postgres',
@@ -11,7 +12,7 @@ export const appDataSource = new DataSource({
   database: env.DATABASE_NAME,
   synchronize: true, // Use with caution in production
   logging: env.NODE_ENV === 'development', // Enable logging for debugging
-  entities: ['src/lib/pg/typeorm/entities/*.ts'],
+  entities: [Product],
 })
 
 appDataSource.initialize()
