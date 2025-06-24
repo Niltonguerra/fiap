@@ -13,9 +13,9 @@ export class AddressRepository implements IAddressRepository {
     const offset = (page - 1) * limit;
 
     const query = `
-      SELECT addresses.*, person.*
-      FROM addresses
-      JOIN person ON addresses.person_id = person.id
+      SELECT address.*, person.*
+      FROM address
+      JOIN person ON address.person_id = person.id
       WHERE person.id = $1
       LIMIT $2 OFFSET $3
     `
@@ -33,7 +33,7 @@ export class AddressRepository implements IAddressRepository {
     person_id
   }: IAddress): Promise<IAddress | undefined> {
     const result = await database.clientInstance?.query<IAddress>(`
-      INSERT INTO "ADDRESS" (street, city, state, zip_code, person_id VALUES 
+      INSERT INTO "address" (street, city, state, zip_code, person_id) VALUES 
       ($1, $2, $3, $4, $5) RETURNING *`,
       [street, city, state, zip_code, person_id])
     return result?.rows[0];
