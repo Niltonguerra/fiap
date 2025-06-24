@@ -1,4 +1,4 @@
-import { UserRepository } from "@/repositories/user.repository";
+import { UserRepository } from "@/repositories/pg/user.repository";
 import { makeFindWithPersonUseCase } from "@/use-cases/factory/make-find-with-person-use-case";
 import { FindWithPersonUseCase } from "@/use-cases/find-with-person";
 import { FastifyReply, FastifyRequest } from "fastify";

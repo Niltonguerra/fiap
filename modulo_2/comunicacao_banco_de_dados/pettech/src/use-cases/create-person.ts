@@ -1,13 +1,13 @@
-import { Person } from "@/entities/person.entity";
-import { PersonRepository } from "@/repositories/person.repository";
+import { IPerson } from "@/entities/models/person.interface";
+import { IPersonRepository } from "@/repositories/person.repository.interface";
 
 
 export class CreatePersonUseCase {
   constructor(
-    private readonly personRepository: PersonRepository
+    private readonly personRepository: IPersonRepository
   ) {}
 
-  handler(person:Person) {
+  handler(person:IPerson) {
     return this.personRepository.create(person)
   }
 

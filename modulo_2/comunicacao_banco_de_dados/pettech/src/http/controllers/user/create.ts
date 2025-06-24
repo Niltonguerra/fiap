@@ -1,4 +1,4 @@
-import { UserRepository } from "@/repositories/user.repository";
+import { UserRepository } from "@/repositories/pg/user.repository";
 import { CreateUserUseCase } from "@/use-cases/create-user";
 import { makeCreateUserUseCase } from "@/use-cases/factory/make-create-user-use-case";
 import { FastifyReply, FastifyRequest } from "fastify";
