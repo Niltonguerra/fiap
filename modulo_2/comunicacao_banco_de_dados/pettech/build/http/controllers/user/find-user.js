@@ -17,15 +17,12 @@ var __copyProps = (to, from, except, desc) => {
 };
 var __toCommonJS = (mod) => __copyProps(__defProp({}, "__esModule", { value: true }), mod);
 
-// src/http/controllers/person/routes.ts
-var routes_exports = {};
-__export(routes_exports, {
-  personRoutes: () => personRoutes
+// src/http/controllers/user/find-user.ts
+var find_user_exports = {};
+__export(find_user_exports, {
+  findUser: () => findUser
 });
-module.exports = __toCommonJS(routes_exports);
-
-// src/http/controllers/person/create.ts
-var import_zod2 = require("zod");
+module.exports = __toCommonJS(find_user_exports);
 
 // src/lib/pg/db.ts
 var import_pg = require("pg");
@@ -76,54 +73,62 @@ var Database = class {
 };
 var database = new Database();
 
-// src/repositories/pg/person.repository.ts
-var PersonRepository = class {
-  async create({ cpf, name, birth, email, user_id }) {
+// src/repositories/pg/user.repository.ts
+var UserRepository = class {
+  async create({ username, password }) {
     const result = await database.clientInstance?.query(
-      "INSERT INTO person (cpf, name, birth, email, user_id) VALUES ($1, $2, $3, $4, $5) RETURNING *",
-      [cpf, name, birth, email, user_id]
+      `INSERT INTO "USER" (username, password) VALUES ($1, $2) RETURNING *`,
+      [username, password]
+    );
+    return result?.rows[0];
+  }
+  async findWithPersonId(userId) {
+    const result = await database.clientInstance?.query(
+      `SELECT * FROM "USER" LEFT JOIN person ON "USER".id = person.user_id WHERE "USER".id = $1`,
+      [userId]
     );
     return result?.rows[0];
   }
 };
 
-// src/use-cases/create-person.ts
-var CreatePersonUseCase = class {
-  constructor(personRepository) {
-    this.personRepository = personRepository;
-  }
-  handler(person) {
-    return this.personRepository.create(person);
+// src/use-cases/error/resource-not-found-error.ts
+var ResourceNotFoundError = class extends Error {
+  constructor() {
+    super(`Resource not found`);
   }
 };
 
-// src/use-cases/factory/make-create-person-use-case.ts
-function makeCreatePersonUseCase() {
-  const personRepository = new PersonRepository();
-  const createPersonUseCase = new CreatePersonUseCase(personRepository);
+// src/use-cases/find-with-person.ts
+var FindWithPersonUseCase = class {
+  constructor(userRepository) {
+    this.userRepository = userRepository;
+  }
+  async handler(userId) {
+    const user = await this.userRepository.findWithPersonId(userId);
+    if (!user) throw new ResourceNotFoundError();
+    return user;
+  }
+};
+
+// src/use-cases/factory/make-find-with-person-use-case.ts
+function makeFindWithPersonUseCase() {
+  const userRepository = new UserRepository();
+  const createPersonUseCase = new FindWithPersonUseCase(userRepository);
   return createPersonUseCase;
 }
 
-// src/http/controllers/person/create.ts
-async function create(request, reply) {
-  const registerBodySchema = import_zod2.z.object({
-    cpf: import_zod2.z.string(),
-    name: import_zod2.z.string(),
-    birth: import_zod2.z.coerce.date(),
-    email: import_zod2.z.string().email(),
-    user_id: import_zod2.z.coerce.number()
+// src/http/controllers/user/find-user.ts
+var import_zod2 = require("zod");
+async function findUser(request, reply) {
+  const registerParamnsSchema = import_zod2.z.object({
+    id: import_zod2.z.coerce.number()
   });
-  const { cpf, name, birth, email, user_id } = registerBodySchema.parse(request.body);
-  const createPersonUseCase = makeCreatePersonUseCase();
-  await createPersonUseCase.handler({ cpf, name, birth, email, user_id });
-  return reply.status(201).send({ message: "Person created successfully" });
-}
-
-// src/http/controllers/person/routes.ts
-async function personRoutes(app) {
-  app.post("/person", create);
+  const { id } = registerParamnsSchema.parse(request.params);
+  const findWithPersonUseCase = makeFindWithPersonUseCase();
+  const user = await findWithPersonUseCase.handler(id);
+  return reply.status(200).send(user);
 }
 // Annotate the CommonJS export names for ESM import in node:
 0 && (module.exports = {
-  personRoutes
+  findUser
 });

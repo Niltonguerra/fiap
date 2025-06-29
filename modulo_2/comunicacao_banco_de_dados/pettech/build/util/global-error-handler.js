@@ -17,12 +17,15 @@ var __copyProps = (to, from, except, desc) => {
 };
 var __toCommonJS = (mod) => __copyProps(__defProp({}, "__esModule", { value: true }), mod);
 
-// src/env/index.ts
-var env_exports = {};
-__export(env_exports, {
-  env: () => env
+// src/util/global-error-handler.ts
+var global_error_handler_exports = {};
+__export(global_error_handler_exports, {
+  errorHandlerMap: () => errorHandlerMap,
+  globalErrorHandler: () => globalErrorHandler
 });
-module.exports = __toCommonJS(env_exports);
+module.exports = __toCommonJS(global_error_handler_exports);
+
+// src/env/index.ts
 var import_config = require("dotenv/config");
 var import_zod = require("zod");
 var envSchema = import_zod.z.object({
@@ -40,7 +43,27 @@ if (!_env.success) {
   throw new Error("Invalid environment variables");
 }
 var env = _env.data;
+
+// src/util/global-error-handler.ts
+var import_zod2 = require("zod");
+var errorHandlerMap = {
+  ZodError: (error, _, reply) => {
+    return reply.status(400).send({ message: "Validation error", ...error instanceof import_zod2.ZodError && { error: error.format() } });
+  },
+  ResourceNotFoundError: (error, _, reply) => {
+    return reply.status(404).send({ message: error.message });
+  }
+};
+var globalErrorHandler = (error, _, reply) => {
+  if (env.NODE_ENV === "development") {
+    console.error(error);
+  }
+  const handler = errorHandlerMap[error.constructor.name];
+  if (handler) return handler(error, _, reply);
+  return reply.status(500).send({ message: "Internal server error" });
+};
 // Annotate the CommonJS export names for ESM import in node:
 0 && (module.exports = {
-  env
+  errorHandlerMap,
+  globalErrorHandler
 });

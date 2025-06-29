@@ -17,30 +17,31 @@ var __copyProps = (to, from, except, desc) => {
 };
 var __toCommonJS = (mod) => __copyProps(__defProp({}, "__esModule", { value: true }), mod);
 
-// src/env/index.ts
-var env_exports = {};
-__export(env_exports, {
-  env: () => env
+// src/lib/typeorm/migrations/1751217296592-ProductAutoGenerateUUID.ts
+var ProductAutoGenerateUUID_exports = {};
+__export(ProductAutoGenerateUUID_exports, {
+  ProductAutoGenerateUUID1751217296592: () => ProductAutoGenerateUUID1751217296592
 });
-module.exports = __toCommonJS(env_exports);
-var import_config = require("dotenv/config");
-var import_zod = require("zod");
-var envSchema = import_zod.z.object({
-  NODE_ENV: import_zod.z.enum(["development", "production", "test"]).default("development"),
-  PORT: import_zod.z.coerce.number().default(3e3),
-  DATABASE_USER: import_zod.z.string(),
-  DATABASE_HOST: import_zod.z.string(),
-  DATABASE_NAME: import_zod.z.string(),
-  DATABASE_PASSWORD: import_zod.z.string(),
-  DATABASE_PORT: import_zod.z.coerce.number()
-});
-var _env = envSchema.safeParse(process.env);
-if (!_env.success) {
-  console.error("Invalid environment variables", _env.error.format());
-  throw new Error("Invalid environment variables");
-}
-var env = _env.data;
+module.exports = __toCommonJS(ProductAutoGenerateUUID_exports);
+var ProductAutoGenerateUUID1751217296592 = class {
+  async up(queryRunner) {
+    await queryRunner.query(`
+            CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+            `);
+    await queryRunner.query(`
+            ALTER TABLE "product"
+            ADD COLUMN id SET DEFAULT uuid_generate_v4();
+            `);
+  }
+  async down(queryRunner) {
+    await queryRunner.query(
+      `ALTER TABLE "product"
+            ALTER COLUMN id DROP DEFAULT;
+            `
+    );
+  }
+};
 // Annotate the CommonJS export names for ESM import in node:
 0 && (module.exports = {
-  env
+  ProductAutoGenerateUUID1751217296592
 });

@@ -5,8 +5,13 @@ import { userRoutes } from './http/controllers/user/routes'
 import { globalErrorHandler } from './util/global-error-handler'
 import { addressRoutes } from './http/controllers/address/routes'
 import '@/lib/typeorm/typeorm'
+import { productRoutes } from "./http/controllers/product/routes"
+import { categoryRoutes } from "./http/controllers/category/routes"
 export const app = fastify()
 app.register(personRoutes)
 app.register(userRoutes)
 app.register(addressRoutes)
+app.register(productRoutes)
+app.register(categoryRoutes)
+
 app.setErrorHandler(globalErrorHandler)

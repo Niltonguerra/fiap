@@ -17,15 +17,12 @@ var __copyProps = (to, from, except, desc) => {
 };
 var __toCommonJS = (mod) => __copyProps(__defProp({}, "__esModule", { value: true }), mod);
 
-// src/http/controllers/person/routes.ts
-var routes_exports = {};
-__export(routes_exports, {
-  personRoutes: () => personRoutes
+// src/http/controllers/address/find-address.ts
+var find_address_exports = {};
+__export(find_address_exports, {
+  findAddress: () => findAddress
 });
-module.exports = __toCommonJS(routes_exports);
-
-// src/http/controllers/person/create.ts
-var import_zod2 = require("zod");
+module.exports = __toCommonJS(find_address_exports);
 
 // src/lib/pg/db.ts
 var import_pg = require("pg");
@@ -76,54 +73,75 @@ var Database = class {
 };
 var database = new Database();
 
-// src/repositories/pg/person.repository.ts
-var PersonRepository = class {
-  async create({ cpf, name, birth, email, user_id }) {
+// src/repositories/pg/address.repository.ts
+var AddressRepository = class {
+  async findAddressByPerson(personId, page, limit) {
+    const offset = (page - 1) * limit;
+    const query = `
+      SELECT address.*, person.*
+      FROM address
+      JOIN person ON address.person_id = person.id
+      WHERE person.id = $1
+      LIMIT $2 OFFSET $3
+    `;
+    const result = await database.clientInstance?.query(query, [personId, limit, offset]);
+    return result?.rows || [];
+  }
+  async create({
+    street,
+    city,
+    state,
+    zip_code,
+    person_id
+  }) {
     const result = await database.clientInstance?.query(
-      "INSERT INTO person (cpf, name, birth, email, user_id) VALUES ($1, $2, $3, $4, $5) RETURNING *",
-      [cpf, name, birth, email, user_id]
+      `
+      INSERT INTO "address" (street, city, state, zip_code, person_id) VALUES 
+      ($1, $2, $3, $4, $5) RETURNING *`,
+      [street, city, state, zip_code, person_id]
     );
     return result?.rows[0];
   }
 };
 
-// src/use-cases/create-person.ts
-var CreatePersonUseCase = class {
-  constructor(personRepository) {
-    this.personRepository = personRepository;
+// src/use-cases/find-address.-by-person.ts
+var FindAddressByPersonUseCase = class {
+  constructor(addressRepository) {
+    this.addressRepository = addressRepository;
   }
-  handler(person) {
-    return this.personRepository.create(person);
+  async handler(personId, page, limit) {
+    return this.addressRepository.findAddressByPerson(personId, page, limit);
   }
 };
 
-// src/use-cases/factory/make-create-person-use-case.ts
-function makeCreatePersonUseCase() {
-  const personRepository = new PersonRepository();
-  const createPersonUseCase = new CreatePersonUseCase(personRepository);
-  return createPersonUseCase;
+// src/use-cases/factory/make-find-address-by-person-use-case.ts
+function makeFindAddressByPersonUseCase() {
+  const addressRepository = new AddressRepository();
+  const findAddressByPersonUseCase = new FindAddressByPersonUseCase(addressRepository);
+  return findAddressByPersonUseCase;
 }
 
-// src/http/controllers/person/create.ts
-async function create(request, reply) {
-  const registerBodySchema = import_zod2.z.object({
-    cpf: import_zod2.z.string(),
-    name: import_zod2.z.string(),
-    birth: import_zod2.z.coerce.date(),
-    email: import_zod2.z.string().email(),
-    user_id: import_zod2.z.coerce.number()
+// src/http/controllers/address/find-address.ts
+var import_zod2 = require("zod");
+async function findAddress(request, reply) {
+  const registerParamsSchema = import_zod2.z.object({
+    personId: import_zod2.z.coerce.number()
   });
-  const { cpf, name, birth, email, user_id } = registerBodySchema.parse(request.body);
-  const createPersonUseCase = makeCreatePersonUseCase();
-  await createPersonUseCase.handler({ cpf, name, birth, email, user_id });
-  return reply.status(201).send({ message: "Person created successfully" });
-}
-
-// src/http/controllers/person/routes.ts
-async function personRoutes(app) {
-  app.post("/person", create);
+  const registerQuerySchema = import_zod2.z.object({
+    page: import_zod2.z.coerce.number(),
+    limit: import_zod2.z.coerce.number()
+  });
+  const { personId } = registerParamsSchema.parse(request.params);
+  const { page, limit } = registerQuerySchema.parse(request.query);
+  const findAddressByPersonUseCase = makeFindAddressByPersonUseCase();
+  const address = await findAddressByPersonUseCase.handler(
+    personId,
+    page,
+    limit
+  );
+  return reply.status(200).send(address);
 }
 // Annotate the CommonJS export names for ESM import in node:
 0 && (module.exports = {
-  personRoutes
+  findAddress
 });

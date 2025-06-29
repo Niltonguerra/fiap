@@ -17,15 +17,12 @@ var __copyProps = (to, from, except, desc) => {
 };
 var __toCommonJS = (mod) => __copyProps(__defProp({}, "__esModule", { value: true }), mod);
 
-// src/http/controllers/person/routes.ts
-var routes_exports = {};
-__export(routes_exports, {
-  personRoutes: () => personRoutes
+// src/http/controllers/address/create.ts
+var create_exports = {};
+__export(create_exports, {
+  create: () => create
 });
-module.exports = __toCommonJS(routes_exports);
-
-// src/http/controllers/person/create.ts
-var import_zod2 = require("zod");
+module.exports = __toCommonJS(create_exports);
 
 // src/lib/pg/db.ts
 var import_pg = require("pg");
@@ -76,54 +73,76 @@ var Database = class {
 };
 var database = new Database();
 
-// src/repositories/pg/person.repository.ts
-var PersonRepository = class {
-  async create({ cpf, name, birth, email, user_id }) {
+// src/repositories/pg/address.repository.ts
+var AddressRepository = class {
+  async findAddressByPerson(personId, page, limit) {
+    const offset = (page - 1) * limit;
+    const query = `
+      SELECT address.*, person.*
+      FROM address
+      JOIN person ON address.person_id = person.id
+      WHERE person.id = $1
+      LIMIT $2 OFFSET $3
+    `;
+    const result = await database.clientInstance?.query(query, [personId, limit, offset]);
+    return result?.rows || [];
+  }
+  async create({
+    street,
+    city,
+    state,
+    zip_code,
+    person_id
+  }) {
     const result = await database.clientInstance?.query(
-      "INSERT INTO person (cpf, name, birth, email, user_id) VALUES ($1, $2, $3, $4, $5) RETURNING *",
-      [cpf, name, birth, email, user_id]
+      `
+      INSERT INTO "address" (street, city, state, zip_code, person_id) VALUES 
+      ($1, $2, $3, $4, $5) RETURNING *`,
+      [street, city, state, zip_code, person_id]
     );
     return result?.rows[0];
   }
 };
 
-// src/use-cases/create-person.ts
-var CreatePersonUseCase = class {
-  constructor(personRepository) {
-    this.personRepository = personRepository;
+// src/use-cases/create-address.ts
+var CreateAddressUseCase = class {
+  constructor(addressrepository) {
+    this.addressrepository = addressrepository;
   }
-  handler(person) {
-    return this.personRepository.create(person);
+  async handler(Address) {
+    return this.addressrepository.create(Address);
   }
 };
 
-// src/use-cases/factory/make-create-person-use-case.ts
-function makeCreatePersonUseCase() {
-  const personRepository = new PersonRepository();
-  const createPersonUseCase = new CreatePersonUseCase(personRepository);
-  return createPersonUseCase;
+// src/use-cases/factory/make-create-address-use-case.ts
+function makeCreateAddressUseCase() {
+  const addressRepository = new AddressRepository();
+  const createAddressUseCase = new CreateAddressUseCase(addressRepository);
+  return createAddressUseCase;
 }
 
-// src/http/controllers/person/create.ts
+// src/http/controllers/address/create.ts
+var import_zod2 = require("zod");
 async function create(request, reply) {
   const registerBodySchema = import_zod2.z.object({
-    cpf: import_zod2.z.string(),
-    name: import_zod2.z.string(),
-    birth: import_zod2.z.coerce.date(),
-    email: import_zod2.z.string().email(),
-    user_id: import_zod2.z.coerce.number()
+    street: import_zod2.z.string(),
+    city: import_zod2.z.string(),
+    state: import_zod2.z.string(),
+    zip_code: import_zod2.z.string(),
+    person_id: import_zod2.z.number()
   });
-  const { cpf, name, birth, email, user_id } = registerBodySchema.parse(request.body);
-  const createPersonUseCase = makeCreatePersonUseCase();
-  await createPersonUseCase.handler({ cpf, name, birth, email, user_id });
-  return reply.status(201).send({ message: "Person created successfully" });
-}
-
-// src/http/controllers/person/routes.ts
-async function personRoutes(app) {
-  app.post("/person", create);
+  const { street, city, state, zip_code, person_id } = registerBodySchema.parse(request.body);
+  const createAddreassUseCase = makeCreateAddressUseCase();
+  const address = await createAddreassUseCase.handler({
+    street,
+    city,
+    state,
+    zip_code,
+    person_id
+  });
+  reply.code(201).send(address);
 }
 // Annotate the CommonJS export names for ESM import in node:
 0 && (module.exports = {
-  personRoutes
+  create
 });

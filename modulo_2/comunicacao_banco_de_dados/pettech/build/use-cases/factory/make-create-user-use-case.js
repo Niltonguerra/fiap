@@ -17,15 +17,12 @@ var __copyProps = (to, from, except, desc) => {
 };
 var __toCommonJS = (mod) => __copyProps(__defProp({}, "__esModule", { value: true }), mod);
 
-// src/http/controllers/person/routes.ts
-var routes_exports = {};
-__export(routes_exports, {
-  personRoutes: () => personRoutes
+// src/use-cases/factory/make-create-user-use-case.ts
+var make_create_user_use_case_exports = {};
+__export(make_create_user_use_case_exports, {
+  makeCreateUserUseCase: () => makeCreateUserUseCase
 });
-module.exports = __toCommonJS(routes_exports);
-
-// src/http/controllers/person/create.ts
-var import_zod2 = require("zod");
+module.exports = __toCommonJS(make_create_user_use_case_exports);
 
 // src/lib/pg/db.ts
 var import_pg = require("pg");
@@ -76,54 +73,41 @@ var Database = class {
 };
 var database = new Database();
 
-// src/repositories/pg/person.repository.ts
-var PersonRepository = class {
-  async create({ cpf, name, birth, email, user_id }) {
+// src/repositories/pg/user.repository.ts
+var UserRepository = class {
+  async create({ username, password }) {
     const result = await database.clientInstance?.query(
-      "INSERT INTO person (cpf, name, birth, email, user_id) VALUES ($1, $2, $3, $4, $5) RETURNING *",
-      [cpf, name, birth, email, user_id]
+      `INSERT INTO "USER" (username, password) VALUES ($1, $2) RETURNING *`,
+      [username, password]
+    );
+    return result?.rows[0];
+  }
+  async findWithPersonId(userId) {
+    const result = await database.clientInstance?.query(
+      `SELECT * FROM "USER" LEFT JOIN person ON "USER".id = person.user_id WHERE "USER".id = $1`,
+      [userId]
     );
     return result?.rows[0];
   }
 };
 
-// src/use-cases/create-person.ts
-var CreatePersonUseCase = class {
-  constructor(personRepository) {
-    this.personRepository = personRepository;
+// src/use-cases/create-user.ts
+var CreateUserUseCase = class {
+  constructor(userRepository) {
+    this.userRepository = userRepository;
   }
-  handler(person) {
-    return this.personRepository.create(person);
+  async handle(user) {
+    return this.userRepository.create(user);
   }
 };
 
-// src/use-cases/factory/make-create-person-use-case.ts
-function makeCreatePersonUseCase() {
-  const personRepository = new PersonRepository();
-  const createPersonUseCase = new CreatePersonUseCase(personRepository);
-  return createPersonUseCase;
-}
-
-// src/http/controllers/person/create.ts
-async function create(request, reply) {
-  const registerBodySchema = import_zod2.z.object({
-    cpf: import_zod2.z.string(),
-    name: import_zod2.z.string(),
-    birth: import_zod2.z.coerce.date(),
-    email: import_zod2.z.string().email(),
-    user_id: import_zod2.z.coerce.number()
-  });
-  const { cpf, name, birth, email, user_id } = registerBodySchema.parse(request.body);
-  const createPersonUseCase = makeCreatePersonUseCase();
-  await createPersonUseCase.handler({ cpf, name, birth, email, user_id });
-  return reply.status(201).send({ message: "Person created successfully" });
-}
-
-// src/http/controllers/person/routes.ts
-async function personRoutes(app) {
-  app.post("/person", create);
+// src/use-cases/factory/make-create-user-use-case.ts
+function makeCreateUserUseCase() {
+  const userRepository = new UserRepository();
+  const createUserUseCase = new CreateUserUseCase(userRepository);
+  return createUserUseCase;
 }
 // Annotate the CommonJS export names for ESM import in node:
 0 && (module.exports = {
-  personRoutes
+  makeCreateUserUseCase
 });
