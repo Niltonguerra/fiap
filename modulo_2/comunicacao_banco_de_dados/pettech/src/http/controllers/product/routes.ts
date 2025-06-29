@@ -4,6 +4,7 @@ import { findAllProducts } from "./find-all-products";
 import { findProduct } from "./find-product";
 import { update } from "./update";
 import { deleteProduct } from "./delete";
+import { validateJwt } from "@/http/middleware/jwt-validate";
 
 export async function productRoutes(app: FastifyInstance) {
    app.get("/product", findAllProducts);

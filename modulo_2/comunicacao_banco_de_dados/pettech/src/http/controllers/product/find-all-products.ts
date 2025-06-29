@@ -2,7 +2,7 @@ import { makeFindAllProductUseCase } from "@/use-cases/factory/make-find-all-pro
 import { FastifyReply, FastifyRequest } from "fastify";
 import { z } from "zod";
 
-export function findAllProducts(
+export async function findAllProducts(
   request: FastifyRequest,
   reply: FastifyReply
 ) {
@@ -12,6 +12,6 @@ export function findAllProducts(
   })
   const { page, limit } = registerQuerySchema.parse(request.query);
   const findProductUseCase = makeFindAllProductUseCase();
-  const products = findProductUseCase.handler(page, limit);
+  const products = await findProductUseCase.handler(page, limit);
   return reply.status(200).send(products);
 }
