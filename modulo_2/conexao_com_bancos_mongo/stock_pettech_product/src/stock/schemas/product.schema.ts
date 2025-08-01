@@ -15,7 +15,7 @@ export class Product implements IProduct {
   @Prop()
   quantity: number;
 
-  @Prop()
+  @Prop({ type: Number, required: false })
   relationId?: number | undefined;
 }
 

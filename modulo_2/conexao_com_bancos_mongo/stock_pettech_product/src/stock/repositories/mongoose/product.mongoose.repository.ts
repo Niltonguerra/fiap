@@ -13,12 +13,13 @@ export class ProductMongooseRepository implements ProductRepository {
     const offset = (page - 1) * limit;
     return this.productModel.find().skip(offset).limit(limit).exec();
   }
-  async getStock(productId: string): Promise<IProduct> {
-    const product = await this.productModel.findById(productId).exec();
-    if (!product) {
-      throw new Error('Product not found');
+  getStock(productId: string): Promise<IProduct | null> {
+    try {
+      return this.productModel.findById(productId).exec();
+    } catch (error) {
+      console.error('Error fetching product:', error);
+      return Promise.resolve(null);
     }
-    return product;
   }
   async createStock(product: IProduct): Promise<void> {
     const newProduct = new this.productModel(product);
