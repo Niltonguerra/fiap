@@ -15,8 +15,8 @@ export class Product implements IProduct {
   @Prop()
   quantity: number;
 
-  @Prop({ type: Number, required: false })
-  relationId?: number | undefined;
+  @Prop({ type: String, required: false })
+  relationId?: string | undefined;
 }
 
 export const ProductSchema = SchemaFactory.createForClass(Product);
