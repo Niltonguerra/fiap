@@ -1,10 +1,26 @@
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { HttpExpectionFilter } from './shared/filters/http-exception.filter';
+import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
+import { setupRedoc } from './shared/middleware/redoc-middleware';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
   app.useGlobalFilters(new HttpExpectionFilter());
+  const config = new DocumentBuilder()
+    .setTitle('pettech-stock')
+    .setDescription('The pettech-stock API description')
+    .setVersion('1.0')
+    .addTag('stock')
+    .addBearerAuth()
+    .build();
+
+  setupRedoc(app);
+
+  const document = SwaggerModule.createDocument(app, config);
+
+  SwaggerModule.setup('api', app, document);
+
   await app.listen(Number(process.env.PORT || 3000));
 }
 bootstrap();
