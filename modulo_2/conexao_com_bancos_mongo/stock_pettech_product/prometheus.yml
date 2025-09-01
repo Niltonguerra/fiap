@@ -1,0 +1,17 @@
+global:
+  scrape_interval: 15s # define que vai coletar as informações da app a cada 15 segundos
+  evaluation_interval: 15s #define também que vai colegar as informações do sistema a cada 15 segundos
+
+#serve para informar o prometheus de onde pegar as informações
+scrape_configs:
+  - job_name: 'prometheus'
+    scrape_interval: 5s #define o intervalo de coleta de 5 segundos
+    # fala onde coletar os dados
+    static_configs:
+      - targets: ['localhost:9090']
+
+  - job_name: 'node-app'
+    scrape_interval: 1s #define o intervalo de coleta de 1 segundo
+    # fala onde coletar os dados
+    static_configs:
+      - targets: ['app:3010']
